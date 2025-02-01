@@ -1,10 +1,10 @@
 "use client"; // Mark as a Client Component
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { exchangeCodeForToken } from "../../lib/spotify";
 
-export default function Callback() {
+function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code");
@@ -17,7 +17,15 @@ export default function Callback() {
           console.error("Error exchanging code for token:", error)
         );
     }
-  }, [code]);
+  }, [code, router]);
 
   return <p>Loading...</p>;
+}
+
+export default function Callback() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <CallbackContent />
+    </Suspense>
+  );
 }

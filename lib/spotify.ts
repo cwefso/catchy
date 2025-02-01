@@ -164,7 +164,7 @@ export const addToSpotify = async (songData: {
   const { artist, title } = songData;
 
   try {
-    let trackUri = await searchSpotifyTrack(artist, title);
+    const trackUri = await searchSpotifyTrack(artist, title);
     if (!trackUri) {
       throw new Error("Track not found on Spotify.");
     }
@@ -181,18 +181,29 @@ export const addToSpotify = async (songData: {
     );
 
     alert("Song added to Spotify playlist!");
-  } catch (error: any) {
-    if (error.response?.status === 401) {
-      try {
-        accessToken = await refreshAccessToken();
-        await addToSpotify(songData); // Retry the operation
-      } catch (refreshError) {
-        console.error("Error refreshing token:", refreshError);
-        alert("Authentication failed. Please try again.");
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      // Handle Axios errors
+      if (error.response?.status === 401) {
+        try {
+          accessToken = await refreshAccessToken();
+          await addToSpotify(songData); // Retry the operation
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+          alert("Authentication failed. Please try again.");
+        }
+      } else {
+        console.error("Error adding song to Spotify playlist:", error);
+        alert("Failed to add song to Spotify playlist.");
       }
+    } else if (error instanceof Error) {
+      // Handle generic errors
+      console.error("Unexpected error:", error.message);
+      alert("An unexpected error occurred.");
     } else {
-      console.error("Error adding song to Spotify playlist:", error);
-      alert("Failed to add song to Spotify playlist.");
+      // Handle cases where the error is not an Error object
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred.");
     }
   }
 };
