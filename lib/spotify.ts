@@ -185,7 +185,7 @@ export const addToSpotify = async (songData: {
       }
     );
 
-    alert("Song added to Spotify playlist!");
+    console.log("Song added to Spotify playlist!");
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       // Handle Axios errors
