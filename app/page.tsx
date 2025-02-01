@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 import { recognizeSong } from "../lib/audd";
 import { addToSpotify } from "../lib/spotify";
 import { ClipLoader } from "react-spinners"; // Import a spinner
-import { FaCheckCircle, FaMusic } from "react-icons/fa"; // Import a check mark icon
+import { FaCheckCircle } from "react-icons/fa"; // Import a check mark icon
 
 export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [songDetails, setSongDetails] = useState<{
+    title: string;
+    artist: string;
+  } | null>(null);
 
   useEffect(() => {
     console.log("is listening: ", isListening);
@@ -40,8 +44,12 @@ export default function Home() {
           const { title, artist } = songData.result;
           console.log(`Song Recognized: ${title} by ${artist}`);
           await addToSpotify(songData.result);
+          setSongDetails({ title, artist }); // Set song details
           setIsSuccess(true); // Set success state
-          setTimeout(() => setIsSuccess(false), 3000); // Reset after 3 seconds
+          setTimeout(() => {
+            setIsSuccess(false);
+            setSongDetails(null); // Reset song details after 3 seconds
+          }, 3000); // Reset after 3 seconds
         } else {
           console.log("No song recognized.");
         }
@@ -49,7 +57,7 @@ export default function Home() {
       };
 
       mediaRecorder.start();
-      setTimeout(() => mediaRecorder.stop(), 6000); // Record for 6 seconds
+      setTimeout(() => mediaRecorder.stop(), 10000); // Record for 10 seconds
     } catch (error) {
       console.error("Error recording audio:", error);
       console.log("Failed to record audio.");
@@ -59,6 +67,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <h1 className="text-3xl font-bold mb-4">Song Recognizer</h1>
       {isListening ? (
         <div className="flex flex-col items-center">
           <ClipLoader color="#3b82f6" size={40} /> {/* Loading spinner */}
@@ -68,15 +77,20 @@ export default function Home() {
         <div className="flex flex-col items-center">
           <FaCheckCircle className="text-green-500 text-4xl" />{" "}
           {/* Green check mark */}
-          <p className="mt-2">You hooked one!</p>
+          <p className="mt-2">Song added to playlist!</p>
+          {songDetails && (
+            <p className="mt-2 text-center">
+              {songDetails.title} by {songDetails.artist}
+            </p>
+          )}
         </div>
       ) : (
         <button
           onClick={startListening}
           disabled={isListening}
-          className="p-24 bg-gray-100 text-white rounded-lg disabled:bg-gray-400"
+          className="px-6 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400"
         >
-          <FaMusic className="text-black text-6xl" />{" "}
+          Recognize Song
         </button>
       )}
     </div>
