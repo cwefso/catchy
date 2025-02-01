@@ -1,12 +1,16 @@
 "use client"; // Mark as a Client Component
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { recognizeSong } from "../lib/audd";
 import { addToSpotify } from "../lib/spotify";
 import { ClipLoader } from "react-spinners"; // Import a spinner
 
 export default function Home() {
   const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    console.log("is listening: ", isListening);
+  }, [isListening]);
 
   const startListening = async () => {
     setIsListening(true);
@@ -15,6 +19,7 @@ export default function Home() {
       // Check for browser support
       if (!navigator.mediaDevices || !window.MediaRecorder) {
         console.log("Your browser does not support audio recording.");
+        setIsListening(false); // Reset state if recording is not supported
         return;
       }
 
@@ -36,6 +41,7 @@ export default function Home() {
         } else {
           console.log("No song recognized.");
         }
+        setIsListening(false); // Reset state after processing is complete
       };
 
       mediaRecorder.start();
@@ -43,8 +49,7 @@ export default function Home() {
     } catch (error) {
       console.error("Error recording audio:", error);
       console.log("Failed to record audio.");
-    } finally {
-      setIsListening(false);
+      setIsListening(false); // Reset state on error
     }
   };
 
