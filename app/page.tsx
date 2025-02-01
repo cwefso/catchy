@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { recognizeSong } from "../lib/audd";
 import { addToSpotify } from "../lib/spotify";
 import { ClipLoader } from "react-spinners"; // Import a spinner
+import { FaCheckCircle } from "react-icons/fa"; // Import a check mark icon
 
 export default function Home() {
   const [isListening, setIsListening] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     console.log("is listening: ", isListening);
@@ -38,6 +40,8 @@ export default function Home() {
           const { title, artist } = songData.result;
           console.log(`Song Recognized: ${title} by ${artist}`);
           await addToSpotify(songData.result);
+          setIsSuccess(true); // Set success state
+          setTimeout(() => setIsSuccess(false), 3000); // Reset after 3 seconds
         } else {
           console.log("No song recognized.");
         }
@@ -45,7 +49,7 @@ export default function Home() {
       };
 
       mediaRecorder.start();
-      setTimeout(() => mediaRecorder.stop(), 10000); // Record for 10 seconds
+      setTimeout(() => mediaRecorder.stop(), 6000); // Record for 6 seconds
     } catch (error) {
       console.error("Error recording audio:", error);
       console.log("Failed to record audio.");
@@ -60,6 +64,12 @@ export default function Home() {
         <div className="flex flex-col items-center">
           <ClipLoader color="#3b82f6" size={40} /> {/* Loading spinner */}
           <p className="mt-2">Listening...</p>
+        </div>
+      ) : isSuccess ? (
+        <div className="flex flex-col items-center">
+          <FaCheckCircle className="text-green-500 text-4xl" />{" "}
+          {/* Green check mark */}
+          <p className="mt-2">Song added to playlist!</p>
         </div>
       ) : (
         <button
