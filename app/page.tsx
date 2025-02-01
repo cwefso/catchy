@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { recognizeSong } from "../lib/audd";
 import { addToSpotify } from "../lib/spotify";
 import { ClipLoader } from "react-spinners"; // Import a spinner
-import { FaCheckCircle } from "react-icons/fa"; // Import a check mark icon
+import { FaCheckCircle, FaMusic } from "react-icons/fa"; // Import a check mark icon
 
 export default function Home() {
   const [isListening, setIsListening] = useState(false);
@@ -74,9 +74,9 @@ export default function Home() {
         <button
           onClick={startListening}
           disabled={isListening}
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400"
+          className="p-24 bg-gray-100 text-white rounded-lg disabled:bg-gray-400"
         >
-          Hook
+          <FaMusic className="text-black text-6xl" />{" "}
         </button>
       )}
     </div>
