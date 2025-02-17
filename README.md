@@ -1,36 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Music Recognition App
 
-## Getting Started
+This is a music recognition app that uses the Shazam API for song detection and Spotify for playlist integration. To get started, you'll need to set up the required environment variables.
 
-First, run the development server:
+---
+
+## Prerequisites
+
+Before running the app, ensure you have the following:
+
+1. **Node.js** installed (v16 or higher recommended).
+2. **npm** or **yarn** installed.
+3. A **Spotify Developer Account** to obtain `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
+4. A **RapidAPI Account** to obtain `RAPIDAPI_KEY`.
+
+---
+
+## Setting Up Environment Variables
+
+To run this app, you need to set up the following environment variables:
+
+| Variable Name           | Description                                                      |
+| ----------------------- | ---------------------------------------------------------------- |
+| `SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
+| `SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
+| `SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
+| `RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
+
+### Step 1: Obtain Spotify Credentials
+
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications).
+2. Log in or create a new account if you don’t have one.
+3. Click **Create an App** and fill in the required details.
+4. Once the app is created, you’ll see the **Client ID** and **Client Secret** on the app’s dashboard.
+5. Set the **Redirect URI** to `http://localhost:3000/callback/spotify/` in the app settings.
+
+### Step 2: Obtain RapidAPI Key
+
+1. Go to the [Shazam API on RapidAPI](https://rapidapi.com/apidojo/api/shazam/).
+2. Sign up or log in to your RapidAPI account.
+3. Subscribe to the Shazam API (free tier available).
+4. After subscribing, you’ll find your API key (`X-RapidAPI-Key`) in the **Code Snippets** section.
+
+### Step 3: Set Up Environment Variables
+
+Create a `.env.local` file in the root of your project and add the following variables:
+
+# Music Recognition App
+
+This is a music recognition app that uses the Shazam API for song detection and Spotify for playlist integration. To get started, you'll need to set up the required environment variables.
+
+---
+
+## Prerequisites
+
+Before running the app, ensure you have the following:
+
+1. **Node.js** installed (v16 or higher recommended).
+2. **npm** or **yarn** installed.
+3. A **Spotify Developer Account** to obtain `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
+4. A **RapidAPI Account** to obtain `RAPIDAPI_KEY`.
+
+---
+
+## Setting Up Environment Variables
+
+To run this app, you need to set up the following environment variables:
+
+| Variable Name           | Description                                                      |
+| ----------------------- | ---------------------------------------------------------------- |
+| `SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
+| `SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
+| `SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
+| `RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
+
+### Step 1: Obtain Spotify Credentials
+
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications).
+2. Log in or create a new account if you don’t have one.
+3. Click **Create an App** and fill in the required details.
+4. Once the app is created, you’ll see the **Client ID** and **Client Secret** on the app’s dashboard.
+5. Set the **Redirect URI** to `http://localhost:3000/callback/spotify/` in the app settings.
+
+### Step 2: Obtain RapidAPI Key
+
+1. Go to the [Shazam API on RapidAPI](https://rapidapi.com/apidojo/api/shazam/).
+2. Sign up or log in to your RapidAPI account.
+3. Subscribe to the Shazam API (free tier available).
+4. After subscribing, you’ll find your API key (`X-RapidAPI-Key`) in the **Code Snippets** section.
+
+### Step 3: Set Up Environment Variables
+
+Create a `.env.local` file in the root of your project and add the following variables:
+
+```env
+SPOTIFY_CLIENT_ID
+SPOTIFY_CLIENT_SECRET
+SPOTIFY_REDIRECT_URI
+RAPIDAPI_KEY
+```
+
+---
+
+## Running the App
+
+1. 1. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+2. Start the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Open your browser and navigate to `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Best Practices for Environment Variables
 
-## Learn More
+- **Never commit `.env.local` to version control:** Add `.env.local` to your `.gitignore` file to avoid exposing sensitive credentials.
+- **Use environment variables in production:** For production deployments, configure environment variables directly in your hosting provider (e.g., Vercel, Netlify, AWS).
+- **Rotate credentials regularly:** If you suspect your credentials are compromised, regenerate them in the respective developer dashboards.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Troubleshooting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Invalid Spotify Redirect URI:** Ensure the redirect URI in your `.env.local` file matches exactly with the one configured in the Spotify Developer Dashboard.
+- **RapidAPI Key Not Working:** Verify that your RapidAPI subscription is active and the key is correctly copied.
+- **Environment Variables Not Loaded:** Restart your development server after adding or modifying environment variables.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If you’d like to contribute to this project, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Submit a pull request with a detailed description of your changes.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
