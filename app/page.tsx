@@ -1,82 +1,154 @@
-"use client"; // Mark as a Client Component
+// page.tsx
+"use client";
 
-import { useEffect, useState } from "react";
-import { recognizeSong } from "../lib/audd";
+import { useCallback, useState, useEffect } from "react";
+import { recognizeSong } from "../lib/shazam";
 import { addToSpotify } from "../lib/spotify";
-import { ClipLoader } from "react-spinners"; // Import a spinner
-import { FaCheckCircle } from "react-icons/fa"; // Import a check mark icon
+import { ClipLoader } from "react-spinners";
+import { FaCheckCircle, FaMusic, FaExclamationCircle } from "react-icons/fa";
+
+interface SongDetails {
+  title: string;
+  artist: string;
+}
 
 export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [songDetails, setSongDetails] = useState<{
-    title: string;
-    artist: string;
-  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [songDetails, setSongDetails] = useState<SongDetails | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    console.log("is listening: ", isListening);
-  }, [isListening]);
+    return () => {
+      if (audioStream) {
+        audioStream.getTracks().forEach((track) => track.stop());
+      }
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+    };
+  }, [audioStream, mediaRecorder]);
 
-  const startListening = async () => {
+  const startListening = useCallback(async () => {
     setIsListening(true);
+    setError(null);
 
     try {
-      // Check for browser support
       if (!navigator.mediaDevices || !window.MediaRecorder) {
-        console.log("Your browser does not support audio recording.");
-        setIsListening(false); // Reset state if recording is not supported
-        return;
+        throw new Error("Your browser does not support audio recording.");
       }
 
-      // Record audio using the Web Audio API
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
+      // Configure audio constraints for better quality
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: 44100,
+          sampleSize: 16,
+        },
+      });
+      setAudioStream(stream);
 
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: "audio/wav" });
-
-        // Send audio to AudD API
-        const songData = await recognizeSong(blob);
-        if (songData && songData.result) {
-          const { title, artist } = songData.result;
-          console.log(`Song Recognized: ${title} by ${artist}`);
-          await addToSpotify(songData.result);
-          setSongDetails({ title, artist }); // Set song details
-          setIsSuccess(true); // Set success state
-          setTimeout(() => {
-            setIsSuccess(false);
-            setSongDetails(null); // Reset song details after 3 seconds
-          }, 3000); // Reset after 3 seconds
-        } else {
-          console.log("No song recognized.");
-        }
-        setIsListening(false); // Reset state after processing is complete
+      // Use higher quality audio encoding
+      const options = {
+        audioBitsPerSecond: 128000,
+        mimeType: "audio/webm;codecs=opus",
       };
 
-      mediaRecorder.start();
-      setTimeout(() => mediaRecorder.stop(), 10000); // Record for 10 seconds
+      const recorder = new MediaRecorder(stream, options);
+      setMediaRecorder(recorder);
+
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: "audio/webm;codecs=opus" });
+
+          if (blob.size === 0) {
+            throw new Error("Recorded audio is empty.");
+          }
+
+          console.log("Audio blob size:", blob.size, "bytes");
+          const songData = await recognizeSong(blob);
+          console.log("song data:", songData);
+          if (songData?.track) {
+            // Check for track object directly
+            const { title, subtitle } = songData.track; // These are the correct fields from the API
+            console.log("title", title, "subtitle", subtitle);
+            await addToSpotify({ title, artist: subtitle });
+            setSongDetails({ title, artist: subtitle });
+            setIsSuccess(true);
+
+            setTimeout(() => {
+              setIsSuccess(false);
+              setSongDetails(null);
+            }, 3000);
+          } else {
+            throw new Error(
+              "No song recognized. Please try again with clearer audio."
+            );
+          }
+        } catch (error) {
+          console.error("Error processing audio:", error);
+          setError(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        } finally {
+          setIsListening(false);
+          stream.getTracks().forEach((track) => track.stop());
+          setAudioStream(null);
+          setMediaRecorder(null);
+        }
+      };
+
+      // Start recording with a data interval of 1 second
+      recorder.start(1000);
+      console.log("Recording started with enhanced quality...");
+
+      // Record for 5 seconds instead of 10 for quicker testing
+      setTimeout(() => {
+        if (recorder.state === "recording") {
+          console.log("Stopping recording...");
+          recorder.stop();
+        }
+      }, 5000);
     } catch (error) {
-      console.error("Error recording audio:", error);
-      console.log("Failed to record audio.");
-      setIsListening(false); // Reset state on error
+      console.error("Error starting recording:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+      setIsListening(false);
     }
-  };
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-3xl font-bold mb-4">Song Recognizer</h1>
+
+      {error && (
+        <div className="flex items-center mb-4 text-red-500">
+          <FaExclamationCircle className="mr-2" />
+          <p>{error}</p>
+        </div>
+      )}
+
       {isListening ? (
         <div className="flex flex-col items-center">
-          <ClipLoader color="#3b82f6" size={40} /> {/* Loading spinner */}
+          <ClipLoader color="#3b82f6" size={40} />
           <p className="mt-2">Listening...</p>
         </div>
       ) : isSuccess ? (
         <div className="flex flex-col items-center">
-          <FaCheckCircle className="text-green-500 text-4xl" />{" "}
-          {/* Green check mark */}
+          <FaCheckCircle className="text-green-500 text-4xl" />
           <p className="mt-2">Song added to playlist!</p>
           {songDetails && (
             <p className="mt-2 text-center">
@@ -88,9 +160,9 @@ export default function Home() {
         <button
           onClick={startListening}
           disabled={isListening}
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-400"
+          className="p-24 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Recognize Song
+          <FaMusic className="text-black text-6xl" />
         </button>
       )}
     </div>
