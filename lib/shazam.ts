@@ -54,11 +54,10 @@ export const recognizeSong = async (
   try {
     // Convert audio to raw PCM data
     const audioContext = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
+      window.webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(
       await audioBlob.arrayBuffer()
     );
-
     // Get the raw audio data
     const rawData = audioBuffer.getChannelData(0);
 
