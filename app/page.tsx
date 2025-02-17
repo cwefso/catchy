@@ -5,7 +5,11 @@ import { useCallback, useState, useEffect } from "react";
 import { recognizeSong } from "../lib/shazam";
 import { addToSpotify } from "../lib/spotify";
 import { ClipLoader } from "react-spinners";
-import { FaCheckCircle, FaMusic, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaMicrophone,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 interface SongDetails {
   title: string;
@@ -129,8 +133,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-3xl font-bold mb-4">Song Recognizer</h1>
-
       {error && (
         <div className="flex items-center mb-4 text-red-500">
           <FaExclamationCircle className="mr-2" />
@@ -157,9 +159,9 @@ export default function Home() {
         <button
           onClick={startListening}
           disabled={isListening}
-          className="p-24 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="p-12 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          <FaMusic className="text-black text-6xl" />
+          <FaMicrophone className="text-black text-8xl" />
         </button>
       )}
     </div>
