@@ -77,13 +77,12 @@ export default function Home() {
             throw new Error("Recorded audio is empty.");
           }
 
-          console.log("Audio blob size:", blob.size, "bytes");
           const songData = await recognizeSong(blob);
-          console.log("song data:", songData);
+
           if (songData?.track) {
             // Check for track object directly
             const { title, subtitle } = songData.track; // These are the correct fields from the API
-            console.log("title", title, "subtitle", subtitle);
+
             await addToSpotify({ title, artist: subtitle });
             setSongDetails({ title, artist: subtitle });
             setIsSuccess(true);
@@ -112,12 +111,10 @@ export default function Home() {
 
       // Start recording with a data interval of 1 second
       recorder.start(1000);
-      console.log("Recording started with enhanced quality...");
 
       // Record for 5 seconds instead of 10 for quicker testing
       setTimeout(() => {
         if (recorder.state === "recording") {
-          console.log("Stopping recording...");
           recorder.stop();
         }
       }, 5000);

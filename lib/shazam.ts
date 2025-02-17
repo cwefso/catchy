@@ -76,7 +76,6 @@ export const recognizeSong = async (
       "Content-Type": "text/plain",
     };
 
-    console.log("Sending audio data to Shazam...");
     const response = await fetch(
       "https://shazam.p.rapidapi.com/songs/v2/detect",
       {
@@ -95,7 +94,7 @@ export const recognizeSong = async (
     }
 
     const data = await response.json();
-    console.log("Shazam API Response:", data);
+
     return data;
   } catch (error) {
     console.error("Error recognizing song:", error);

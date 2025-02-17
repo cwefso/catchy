@@ -1,21 +1,37 @@
 import axios from "axios";
+import { cookies } from "next/headers";
+
 const NEXT_PUBLIC_SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 const NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET =
   process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
 const NEXT_PUBLIC_SPOTIFY_REDIRECT_URI =
   process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI;
+const SPOTIFY_PLAYLIST_ID = process.env.SPOTIFY_PLAYLIST_ID;
 
 if (
   !NEXT_PUBLIC_SPOTIFY_CLIENT_ID ||
   !NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET ||
-  !NEXT_PUBLIC_SPOTIFY_REDIRECT_URI
+  !NEXT_PUBLIC_SPOTIFY_REDIRECT_URI ||
+  !SPOTIFY_PLAYLIST_ID
 ) {
   throw new Error(
     "Missing Spotify environment variables. Check your .env file."
   );
 }
 
-// Generate the authorization URL
+const getCookie = async (name: string) => {
+  const cookieStore = await cookies();
+  return cookieStore.get(name)?.value;
+};
+
+const setCookie = async (name: string, value: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(name, value, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+};
+
 export const getAuthorizationUrl = () => {
   const scopes = [
     "playlist-modify-public",
@@ -34,20 +50,17 @@ export const getAuthorizationUrl = () => {
   return `https://accounts.spotify.com/authorize?${params.toString()}`;
 };
 
-// Initialize Spotify authentication
 export const initializeSpotifyAuth = () => {
-  const accessToken = localStorage.getItem("spotifyAccessToken");
-  const refreshToken = localStorage.getItem("spotifyRefreshToken");
+  const accessToken = getCookie("spotifyAccessToken");
+  const refreshToken = getCookie("spotifyRefreshToken");
 
   if (!accessToken || !refreshToken) {
-    // Redirect to Spotify authorization if no tokens exist
     window.location.href = getAuthorizationUrl();
     return false;
   }
   return true;
 };
 
-// Exchange the authorization code for an access token
 export const exchangeCodeForToken = async (code: string) => {
   try {
     const response = await axios.post(
@@ -67,8 +80,8 @@ export const exchangeCodeForToken = async (code: string) => {
     );
 
     if (response.data.access_token && response.data.refresh_token) {
-      localStorage.setItem("spotifyAccessToken", response.data.access_token);
-      localStorage.setItem("spotifyRefreshToken", response.data.refresh_token);
+      setCookie("spotifyAccessToken", response.data.access_token);
+      setCookie("spotifyRefreshToken", response.data.refresh_token);
       return response.data.access_token;
     } else {
       throw new Error("Invalid token response");
@@ -79,15 +92,13 @@ export const exchangeCodeForToken = async (code: string) => {
   }
 };
 
-// Refresh the access token using the refresh token
 export const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem("spotifyRefreshToken");
+  const refreshToken = await getCookie("spotifyRefreshToken");
   if (!refreshToken) {
-    // If no refresh token exists, start the auth flow again
     initializeSpotifyAuth();
     throw new Error("No refresh token found. Starting authentication flow.");
   }
-
+  const cookieStore = await cookies();
   try {
     const response = await axios.post(
       "https://accounts.spotify.com/api/token",
@@ -105,13 +116,10 @@ export const refreshAccessToken = async () => {
     );
 
     if (response.data.access_token) {
-      localStorage.setItem("spotifyAccessToken", response.data.access_token);
-      // Some implementations also provide a new refresh token
+      setCookie("spotifyAccessToken", response.data.access_token);
+
       if (response.data.refresh_token) {
-        localStorage.setItem(
-          "spotifyRefreshToken",
-          response.data.refresh_token
-        );
+        setCookie("spotifyRefreshToken", response.data.refresh_token);
       }
       return response.data.access_token;
     } else {
@@ -119,25 +127,23 @@ export const refreshAccessToken = async () => {
     }
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    // Clear tokens and restart auth flow on refresh failure
-    localStorage.removeItem("spotifyAccessToken");
-    localStorage.removeItem("spotifyRefreshToken");
+
+    cookieStore.delete("spotifyAccessToken");
+    cookieStore.delete("spotifyRefreshToken");
     initializeSpotifyAuth();
     throw error;
   }
 };
 
-// Search for a track on Spotify using the artist and title
 export const searchSpotifyTrack = async (artist: string, title: string) => {
-  const accessToken = localStorage.getItem("spotifyAccessToken");
+  const accessToken = getCookie("spotifyAccessToken");
   if (!accessToken) {
-    // Initialize auth if no access token exists
     initializeSpotifyAuth();
     throw new Error("No access token found. Starting authentication flow.");
   }
 
   try {
-    const simplifiedTitle = title.replace(/\(.*\)/, "").trim(); // Remove anything in parentheses
+    const simplifiedTitle = title.replace(/\(.*\)/, "").trim();
     const query = `track:${simplifiedTitle} artist:${artist}`;
     const response = await axios.get("https://api.spotify.com/v1/search", {
       headers: {
@@ -160,18 +166,16 @@ export const searchSpotifyTrack = async (artist: string, title: string) => {
   }
 };
 
-// Add a track to a Spotify playlist
 export const addToSpotify = async (songData: {
   artist: string;
   title: string;
 }) => {
-  // Check for tokens before proceeding
   if (!initializeSpotifyAuth()) {
-    return; // Auth flow will handle the redirect
+    return;
   }
 
-  let accessToken = localStorage.getItem("spotifyAccessToken");
-  const playlistId = "0qiJyAxESNqy4AynkpHerX";
+  let accessToken = getCookie("spotifyAccessToken");
+  const playlistId = SPOTIFY_PLAYLIST_ID;
   const { artist, title } = songData;
 
   try {
@@ -194,11 +198,10 @@ export const addToSpotify = async (songData: {
     console.log("Song added to Spotify playlist!");
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      // Handle Axios errors
       if (error.response?.status === 401) {
         try {
           accessToken = await refreshAccessToken();
-          await addToSpotify(songData); // Retry the operation
+          await addToSpotify(songData);
         } catch (refreshError) {
           console.error("Error refreshing token:", refreshError);
           alert("Authentication failed. Please try again.");
@@ -208,11 +211,9 @@ export const addToSpotify = async (songData: {
         alert("Failed to add song to Spotify playlist.");
       }
     } else if (error instanceof Error) {
-      // Handle generic errors
       console.error("Unexpected error:", error.message);
       alert("An unexpected error occurred.");
     } else {
-      // Handle cases where the error is not an Error object
       console.error("Unexpected error:", error);
       alert("An unexpected error occurred.");
     }
