@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Hook",
+  title: "Catchy",
   description:
     "An app to recognize songs and add them to your Spotify playlist.",
   manifest: "/manifest.json", // Link the manifest file

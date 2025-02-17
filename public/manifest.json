@@ -1,6 +1,6 @@
 {
-  "name": "The Hook",
-  "short_name": "Hook",
+  "name": "Catchy",
+  "short_name": "Catchy",
   "description": "An app to recognize songs and add them to your Spotify playlist.",
   "start_url": "/",
   "display": "standalone",
