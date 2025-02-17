@@ -1,10 +1,10 @@
 // shazam.ts
-const API_KEY = process.env.RAPIDAPI_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
 const API_HOST = "shazam.p.rapidapi.com";
 
 if (!API_KEY) {
   throw new Error(
-    "Shazam API key is missing. Please set the RAPIDAPI_KEY environment variable."
+    "Shazam API key is missing. Please set the NEXT_PUBLIC_RAPIDAPI_KEY environment variable."
   );
 }
 

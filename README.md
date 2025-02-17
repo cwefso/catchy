@@ -10,8 +10,8 @@ Before running the app, ensure you have the following:
 
 1. **Node.js** installed (v16 or higher recommended).
 2. **npm** or **yarn** installed.
-3. A **Spotify Developer Account** to obtain `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
-4. A **RapidAPI Account** to obtain `RAPIDAPI_KEY`.
+3. A **Spotify Developer Account** to obtain `NEXT_PUBLIC_SPOTIFY_CLIENT_ID` and `NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET`.
+4. A **RapidAPI Account** to obtain `NEXT_PUBLIC_RAPIDAPI_KEY`.
 
 ---
 
@@ -19,12 +19,12 @@ Before running the app, ensure you have the following:
 
 To run this app, you need to set up the following environment variables:
 
-| Variable Name           | Description                                                      |
-| ----------------------- | ---------------------------------------------------------------- |
-| `SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
-| `SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
-| `SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
-| `RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
+| Variable Name                       | Description                                                      |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `NEXT_PUBLIC_SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
+| `NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
+| `NEXT_PUBLIC_SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
+| `NEXT_PUBLIC_RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
 
 ### Step 1: Obtain Spotify Credentials
 
@@ -57,8 +57,8 @@ Before running the app, ensure you have the following:
 
 1. **Node.js** installed (v16 or higher recommended).
 2. **npm** or **yarn** installed.
-3. A **Spotify Developer Account** to obtain `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
-4. A **RapidAPI Account** to obtain `RAPIDAPI_KEY`.
+3. A **Spotify Developer Account** to obtain `NEXT_PUBLIC_SPOTIFY_CLIENT_ID` and `NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET`.
+4. A **RapidAPI Account** to obtain `NEXT_PUBLIC_RAPIDAPI_KEY`.
 
 ---
 
@@ -66,12 +66,12 @@ Before running the app, ensure you have the following:
 
 To run this app, you need to set up the following environment variables:
 
-| Variable Name           | Description                                                      |
-| ----------------------- | ---------------------------------------------------------------- |
-| `SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
-| `SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
-| `SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
-| `RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
+| Variable Name                       | Description                                                      |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `NEXT_PUBLIC_SPOTIFY_CLIENT_ID`     | Your Spotify App's Client ID.                                    |
+| `NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET` | Your Spotify App's Client Secret.                                |
+| `NEXT_PUBLIC_SPOTIFY_REDIRECT_URI`  | The redirect URI configured in your Spotify Developer Dashboard. |
+| `NEXT_PUBLIC_RAPIDAPI_KEY`          | Your RapidAPI key for accessing the Shazam API.                  |
 
 ### Step 1: Obtain Spotify Credentials
 
@@ -93,10 +93,10 @@ To run this app, you need to set up the following environment variables:
 Create a `.env.local` file in the root of your project and add the following variables:
 
 ```env
-SPOTIFY_CLIENT_ID
-SPOTIFY_CLIENT_SECRET
-SPOTIFY_REDIRECT_URI
-RAPIDAPI_KEY
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID
+NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI
+NEXT_PUBLIC_RAPIDAPI_KEY
 ```
 
 ---

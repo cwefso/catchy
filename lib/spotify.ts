@@ -1,9 +1,15 @@
 import axios from "axios";
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
+const NEXT_PUBLIC_SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+const NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET =
+  process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET;
+const NEXT_PUBLIC_SPOTIFY_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI;
 
-if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET || !SPOTIFY_REDIRECT_URI) {
+if (
+  !NEXT_PUBLIC_SPOTIFY_CLIENT_ID ||
+  !NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET ||
+  !NEXT_PUBLIC_SPOTIFY_REDIRECT_URI
+) {
   throw new Error(
     "Missing Spotify environment variables. Check your .env file."
   );
@@ -18,9 +24,9 @@ export const getAuthorizationUrl = () => {
   ];
 
   const params = new URLSearchParams({
-    client_id: SPOTIFY_CLIENT_ID,
+    client_id: NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
     response_type: "code",
-    redirect_uri: SPOTIFY_REDIRECT_URI,
+    redirect_uri: NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
     scope: scopes.join(" "),
     show_dialog: "true",
   });
@@ -49,9 +55,9 @@ export const exchangeCodeForToken = async (code: string) => {
       new URLSearchParams({
         grant_type: "authorization_code",
         code,
-        redirect_uri: SPOTIFY_REDIRECT_URI,
-        client_id: SPOTIFY_CLIENT_ID,
-        client_secret: SPOTIFY_CLIENT_SECRET,
+        redirect_uri: NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
+        client_id: NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
+        client_secret: NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,
       }),
       {
         headers: {
@@ -88,8 +94,8 @@ export const refreshAccessToken = async () => {
       new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token: refreshToken,
-        client_id: SPOTIFY_CLIENT_ID,
-        client_secret: SPOTIFY_CLIENT_SECRET,
+        client_id: NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
+        client_secret: NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,
       }),
       {
         headers: {
