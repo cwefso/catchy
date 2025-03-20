@@ -53,8 +53,7 @@ export const recognizeSong = async (
 ): Promise<ShazamTrack | null> => {
   try {
     // Convert audio to raw PCM data
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
+    const audioContext = new (window.AudioContext || window.AudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(
       await audioBlob.arrayBuffer()
     );
