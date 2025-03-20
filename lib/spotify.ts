@@ -9,8 +9,11 @@ if (!SPOTIFY_PLAYLIST_ID) {
 
 export const searchSpotifyTrack = async (artist: string, title: string) => {
   try {
-    // Get tokens
-    let { accessToken, refreshToken } = await getTokens();
+    const tokens = await getTokens();
+
+    // Destructure with proper immutability
+    const { refreshToken } = tokens;
+    let { accessToken } = tokens;
 
     // If no access token but we have a refresh token, try refreshing
     if (!accessToken && refreshToken) {
@@ -57,8 +60,11 @@ export const addToSpotify = async (songData: {
     const MAX_RETRIES = 3;
 
     try {
-      // Get tokens
-      let { accessToken, refreshToken } = await getTokens();
+      const tokens = await getTokens();
+
+      // Destructure with proper immutability
+      const { refreshToken } = tokens;
+      let { accessToken } = tokens;
 
       // If no access token but we have a refresh token, try refreshing
       if (!accessToken && refreshToken) {
