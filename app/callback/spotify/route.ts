@@ -1,4 +1,3 @@
-// app/callback/spotify/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -19,7 +18,6 @@ export async function GET(request: Request) {
       throw new Error("Missing Spotify environment variables.");
     }
 
-    // Exchange the code for an access token
     const response = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",
       headers: {
@@ -46,7 +44,6 @@ export async function GET(request: Request) {
 
     const data = await response.json();
     const cookieStore = await cookies();
-    // Store the tokens securely in cookies
     cookieStore.set("spotifyAccessToken", data.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -56,7 +53,6 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    // Redirect to the home page
     return NextResponse.redirect(new URL("/", request.url));
   } catch (error) {
     console.error("Error in Spotify callback:", error);

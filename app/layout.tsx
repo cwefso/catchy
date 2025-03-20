@@ -16,10 +16,10 @@ export const metadata: Metadata = {
   title: "Catchy",
   description:
     "An app to recognize songs and add them to your Spotify playlist.",
-  manifest: "/manifest.json", // Link the manifest file
+  manifest: "/manifest.json",
   themeColor: "#3b82f6",
   icons: {
-    icon: "/favicon.ico", // Add this line
+    icon: "/favicon.ico",
   },
 };
 

@@ -1,4 +1,3 @@
-// shazam.ts
 const API_KEY = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
 const API_HOST = "shazam.p.rapidapi.com";
 
@@ -52,21 +51,18 @@ export const recognizeSong = async (
   audioBlob: Blob
 ): Promise<ShazamTrack | null> => {
   try {
-    // Convert audio to raw PCM data
     const audioContext = new (window.AudioContext || window.AudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(
       await audioBlob.arrayBuffer()
     );
-    // Get the raw audio data
+
     const rawData = audioBuffer.getChannelData(0);
 
-    // Convert to 16-bit PCM
     const samples = new Int16Array(rawData.length);
     for (let i = 0; i < rawData.length; i++) {
       samples[i] = rawData[i] * 32767;
     }
 
-    // Convert to base64
     const base64Audio = Buffer.from(samples.buffer).toString("base64");
 
     const headers = {

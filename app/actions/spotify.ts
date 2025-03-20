@@ -1,5 +1,4 @@
-// app/actions/spotify.ts
-"use server"; // Mark this as a Server Action
+"use server";
 
 import { cookies } from "next/headers";
 import axios from "axios";
@@ -20,24 +19,21 @@ if (
   );
 }
 
-// Helper function to get cookies
 export const getTokens = async () => {
-  const cookieStore = await cookies(); // Await the cookies() function
+  const cookieStore = await cookies();
   const accessToken = cookieStore.get("spotifyAccessToken")?.value;
   const refreshToken = cookieStore.get("spotifyRefreshToken")?.value;
   return { accessToken, refreshToken };
 };
 
-// Helper function to set cookies
 const setCookie = async (name: string, value: string) => {
-  const cookieStore = await cookies(); // Await the cookies() function
+  const cookieStore = await cookies();
   cookieStore.set(name, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   });
 };
 
-// Exchange the authorization code for an access token
 export const exchangeCodeForToken = async (code: string) => {
   try {
     const response = await axios.post(
@@ -68,7 +64,7 @@ export const exchangeCodeForToken = async (code: string) => {
     throw error;
   }
 };
-// Refresh the access token using the refresh token
+//
 export const refreshAccessToken = async () => {
   try {
     const { refreshToken } = await getTokens();

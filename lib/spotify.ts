@@ -11,16 +11,13 @@ export const searchSpotifyTrack = async (artist: string, title: string) => {
   try {
     const tokens = await getTokens();
 
-    // Destructure with proper immutability
     const { refreshToken } = tokens;
     let { accessToken } = tokens;
 
-    // If no access token but we have a refresh token, try refreshing
     if (!accessToken && refreshToken) {
       accessToken = await refreshAccessToken();
     }
 
-    // If we still don't have a token, silently fail
     if (!accessToken) {
       console.log("No Spotify authentication available for search.");
       return null;
@@ -62,11 +59,9 @@ export const addToSpotify = async (songData: {
     try {
       const tokens = await getTokens();
 
-      // Destructure with proper immutability
       const { refreshToken } = tokens;
       let { accessToken } = tokens;
 
-      // If no access token but we have a refresh token, try refreshing
       if (!accessToken && refreshToken) {
         console.log(
           "No access token, but found refresh token. Attempting to refresh..."
@@ -74,7 +69,6 @@ export const addToSpotify = async (songData: {
         accessToken = await refreshAccessToken();
       }
 
-      // If we still don't have a token, silently fail but return false to indicate failure
       if (!accessToken) {
         console.log("No authentication tokens available.");
         return false;
@@ -107,9 +101,8 @@ export const addToSpotify = async (songData: {
       ) {
         console.log("Token expired. Attempting to refresh...");
 
-        // Try refreshing token and retry
         await refreshAccessToken();
-        // Wait a short time for the cookies to be properly set
+
         await new Promise((resolve) => setTimeout(resolve, 300));
 
         return addTrackToPlaylist(retryCount + 1);
@@ -121,7 +114,6 @@ export const addToSpotify = async (songData: {
   };
 
   try {
-    // Note: We don't show any alerts here, just return success or failure
     return await addTrackToPlaylist();
   } catch (error) {
     console.error("Unhandled error in addToSpotify:", error);
