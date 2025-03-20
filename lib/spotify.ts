@@ -1,4 +1,3 @@
-// lib/spotify.ts
 import axios from "axios";
 import { getTokens, refreshAccessToken } from "../app/actions/spotify";
 
@@ -8,16 +7,25 @@ if (!SPOTIFY_PLAYLIST_ID) {
   throw new Error("Missing Spotify playlist ID. Check your .env file.");
 }
 
-// Search for a track on Spotify using the artist and title
 export const searchSpotifyTrack = async (artist: string, title: string) => {
-  const { accessToken } = await getTokens();
-  if (!accessToken) {
-    throw new Error("No access token found. Please re-authenticate.");
-  }
-
   try {
+    // Get tokens
+    let { accessToken, refreshToken } = await getTokens();
+
+    // If no access token but we have a refresh token, try refreshing
+    if (!accessToken && refreshToken) {
+      accessToken = await refreshAccessToken();
+    }
+
+    // If we still don't have a token, silently fail
+    if (!accessToken) {
+      console.log("No Spotify authentication available for search.");
+      return null;
+    }
+
     const simplifiedTitle = title.replace(/\(.*\)/, "").trim();
     const query = `track:${simplifiedTitle} artist:${artist}`;
+
     const response = await axios.get("https://api.spotify.com/v1/search", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -35,56 +43,82 @@ export const searchSpotifyTrack = async (artist: string, title: string) => {
     return null;
   } catch (error) {
     console.error("Error searching for track on Spotify:", error);
-    throw error;
+    return null;
   }
 };
 
-// Add a track to a Spotify playlist
 export const addToSpotify = async (songData: {
   artist: string;
   title: string;
 }) => {
-  let { accessToken } = await getTokens();
   const { artist, title } = songData;
 
-  try {
-    const trackUri = await searchSpotifyTrack(artist, title);
-    if (!trackUri) {
-      throw new Error("Track not found on Spotify.");
-    }
+  const addTrackToPlaylist = async (retryCount = 0): Promise<boolean> => {
+    const MAX_RETRIES = 3;
 
-    await axios.post(
-      `https://api.spotify.com/v1/playlists/${SPOTIFY_PLAYLIST_ID}/tracks`,
-      { uris: [trackUri] },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+    try {
+      // Get tokens
+      let { accessToken, refreshToken } = await getTokens();
+
+      // If no access token but we have a refresh token, try refreshing
+      if (!accessToken && refreshToken) {
+        console.log(
+          "No access token, but found refresh token. Attempting to refresh..."
+        );
+        accessToken = await refreshAccessToken();
       }
-    );
 
-    console.log("Song added to Spotify playlist!");
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401) {
-        try {
-          accessToken = await refreshAccessToken();
-          await addToSpotify(songData);
-        } catch (refreshError) {
-          console.error("Error refreshing token:", refreshError);
-          alert("Authentication failed. Please try again.");
+      // If we still don't have a token, silently fail but return false to indicate failure
+      if (!accessToken) {
+        console.log("No authentication tokens available.");
+        return false;
+      }
+
+      const trackUri = await searchSpotifyTrack(artist, title);
+      if (!trackUri) {
+        console.log("Track not found on Spotify.");
+        return false;
+      }
+
+      await axios.post(
+        `https://api.spotify.com/v1/playlists/${SPOTIFY_PLAYLIST_ID}/tracks`,
+        { uris: [trackUri] },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
         }
-      } else {
-        console.error("Error adding song to Spotify playlist:", error);
-        alert("Failed to add song to Spotify playlist.");
+      );
+
+      console.log("Song added to Spotify playlist!");
+      return true;
+    } catch (error: unknown) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 401 &&
+        retryCount < MAX_RETRIES
+      ) {
+        console.log("Token expired. Attempting to refresh...");
+
+        // Try refreshing token and retry
+        await refreshAccessToken();
+        // Wait a short time for the cookies to be properly set
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        return addTrackToPlaylist(retryCount + 1);
       }
-    } else if (error instanceof Error) {
-      console.error("Unexpected error:", error.message);
-      alert("An unexpected error occurred.");
-    } else {
-      console.error("Unexpected error:", error);
-      alert("An unexpected error occurred.");
+
+      console.error("Error in playlist operation:", error);
+      return false;
     }
+  };
+
+  try {
+    // Note: We don't show any alerts here, just return success or failure
+    return await addTrackToPlaylist();
+  } catch (error) {
+    console.error("Unhandled error in addToSpotify:", error);
+    return false;
   }
 };

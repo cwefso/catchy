@@ -68,15 +68,16 @@ export const exchangeCodeForToken = async (code: string) => {
     throw error;
   }
 };
-
 // Refresh the access token using the refresh token
 export const refreshAccessToken = async () => {
-  const { refreshToken } = await getTokens(); // Await getTokens()
-  if (!refreshToken) {
-    throw new Error("No refresh token found. Please re-authenticate.");
-  }
-
   try {
+    const { refreshToken } = await getTokens();
+
+    if (!refreshToken) {
+      console.log("No refresh token available.");
+      return null;
+    }
+
     const response = await axios.post(
       "https://accounts.spotify.com/api/token",
       new URLSearchParams({
@@ -98,11 +99,11 @@ export const refreshAccessToken = async () => {
         await setCookie("spotifyRefreshToken", response.data.refresh_token);
       }
       return response.data.access_token;
-    } else {
-      throw new Error("Invalid token response");
     }
+
+    return null;
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    throw error;
+    return null;
   }
 };
