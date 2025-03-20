@@ -15,7 +15,7 @@ export const MicrophoneButton = ({
 }: MicrophoneButtonProps) => {
   let buttonClass = "p-8 rounded-full transition-colors ";
   let icon = <FaMicrophone className="text-white text-6xl" />;
-  let isDisabled = isListening || isProcessing || isProcessComplete;
+  const isDisabled = isListening || isProcessing || isProcessComplete;
 
   if (isListening) {
     // Red button while listening

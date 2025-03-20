@@ -25,7 +25,9 @@ export default function Home() {
   useEffect(() => {
     return () => {
       audioStream?.getTracks().forEach((track) => track.stop());
-      mediaRecorder?.state === "recording" && mediaRecorder.stop();
+      if (mediaRecorder?.state === "recording") {
+        mediaRecorder.stop();
+      }
     };
   }, [audioStream, mediaRecorder]);
 
