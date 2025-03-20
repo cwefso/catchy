@@ -5,6 +5,7 @@ interface MicrophoneButtonProps {
   isProcessing: boolean; // For the grey state
   isProcessComplete: boolean;
   onClick: () => void;
+  disabled: boolean;
 }
 
 export const MicrophoneButton = ({
@@ -12,10 +13,12 @@ export const MicrophoneButton = ({
   isProcessing,
   isProcessComplete,
   onClick,
+  disabled,
 }: MicrophoneButtonProps) => {
   let buttonClass = "p-8 rounded-full transition-colors ";
   let icon = <FaMicrophone className="text-white text-6xl" />;
-  const isDisabled = isListening || isProcessing || isProcessComplete;
+  const isDisabled =
+    disabled || isListening || isProcessing || isProcessComplete;
 
   if (isListening) {
     // Red button while listening

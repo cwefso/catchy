@@ -5,6 +5,11 @@ import { recognizeSong } from "../lib/shazam";
 import { addToSpotify } from "../lib/spotify";
 import { MicrophoneButton } from "./components/MicrophoneButton";
 import { Message } from "./components/Message";
+import {
+  getTokens,
+  refreshAccessToken,
+  getSpotifyAuthUrl,
+} from "./actions/spotify";
 
 interface SongDetails {
   title: string;
@@ -21,7 +26,30 @@ export default function Home() {
     null
   );
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [isSpotifyConnected, setIsSpotifyConnected] = useState(false);
 
+  // Check Spotify connection status on mount
+  useEffect(() => {
+    const checkSpotifyConnection = async () => {
+      try {
+        let { accessToken } = await getTokens();
+        const { refreshToken } = await getTokens();
+
+        if (!accessToken && refreshToken) {
+          accessToken = await refreshAccessToken();
+        }
+
+        setIsSpotifyConnected(!!accessToken);
+      } catch (error) {
+        console.error("Spotify connection check failed:", error);
+        setIsSpotifyConnected(false);
+      }
+    };
+
+    checkSpotifyConnection();
+  }, []);
+
+  // Cleanup effect
   useEffect(() => {
     return () => {
       audioStream?.getTracks().forEach((track) => track.stop());
@@ -31,7 +59,21 @@ export default function Home() {
     };
   }, [audioStream, mediaRecorder]);
 
+  const handleConnectSpotify = async () => {
+    try {
+      const authUrl = await getSpotifyAuthUrl();
+      window.location.href = authUrl;
+    } catch {
+      setError("Failed to connect to Spotify. Please try again.");
+    }
+  };
+
   const startListening = useCallback(async () => {
+    if (!isSpotifyConnected) {
+      setError("Please connect your Spotify account first");
+      return;
+    }
+
     setIsListening(true);
     setError(null);
     setIsProcessComplete(false);
@@ -49,7 +91,9 @@ export default function Home() {
       setMediaRecorder(recorder);
 
       const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
 
       recorder.onstop = async () => {
         setIsProcessing(true);
@@ -74,21 +118,40 @@ export default function Home() {
           setIsListening(false);
           setIsProcessing(false);
           stream.getTracks().forEach((track) => track.stop());
+          setAudioStream(null);
+          setMediaRecorder(null);
         }
       };
 
       recorder.start(1000);
-      setTimeout(() => recorder.state === "recording" && recorder.stop(), 5000);
+      setTimeout(() => {
+        if (recorder.state === "recording") recorder.stop();
+      }, 5000);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Failed to start recording"
       );
       setIsListening(false);
     }
-  }, []);
+  }, [isSpotifyConnected]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      {!isSpotifyConnected && (
+        <div className="mb-8 text-center">
+          <Message
+            type="error"
+            message="Connect your Spotify account to save songs to your playlist"
+          />
+          <button
+            onClick={handleConnectSpotify}
+            className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors"
+          >
+            Connect Spotify
+          </button>
+        </div>
+      )}
+
       {error && <Message type="error" message={error} />}
 
       {isProcessComplete && (
@@ -105,6 +168,7 @@ export default function Home() {
           isProcessing={isProcessing}
           isProcessComplete={isProcessComplete}
           onClick={startListening}
+          disabled={!isSpotifyConnected}
         />
       </div>
     </div>

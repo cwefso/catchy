@@ -1,5 +1,4 @@
-// app/actions/spotify.ts
-"use server"; // Mark this as a Server Action
+"use server";
 
 import { cookies } from "next/headers";
 import axios from "axios";
@@ -10,6 +9,7 @@ const NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET =
 const NEXT_PUBLIC_SPOTIFY_REDIRECT_URI =
   process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI;
 
+// Validate environment variables first
 if (
   !NEXT_PUBLIC_SPOTIFY_CLIENT_ID ||
   !NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET ||
@@ -20,24 +20,38 @@ if (
   );
 }
 
-// Helper function to get cookies
-export const getTokens = async () => {
-  const cookieStore = await cookies(); // Await the cookies() function
-  const accessToken = cookieStore.get("spotifyAccessToken")?.value;
-  const refreshToken = cookieStore.get("spotifyRefreshToken")?.value;
-  return { accessToken, refreshToken };
+// Spotify OAuth URL generator
+export const getSpotifyAuthUrl = async () => {
+  const params = new URLSearchParams({
+    client_id: NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
+    response_type: "code",
+    redirect_uri: NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
+    scope: "playlist-modify-public playlist-modify-private",
+    show_dialog: "true",
+  });
+  return `https://accounts.spotify.com/authorize?${params.toString()}`;
 };
 
-// Helper function to set cookies
+// Get stored tokens
+export const getTokens = async () => {
+  const cookieStore = await cookies();
+  return {
+    accessToken: cookieStore.get("spotifyAccessToken")?.value,
+    refreshToken: cookieStore.get("spotifyRefreshToken")?.value,
+  };
+};
+
+// Store tokens in cookies
 const setCookie = async (name: string, value: string) => {
-  const cookieStore = await cookies(); // Await the cookies() function
+  const cookieStore = await cookies();
   cookieStore.set(name, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    path: "/",
   });
 };
 
-// Exchange the authorization code for an access token
+// Exchange authorization code for tokens
 export const exchangeCodeForToken = async (code: string) => {
   try {
     const response = await axios.post(
@@ -56,27 +70,24 @@ export const exchangeCodeForToken = async (code: string) => {
       }
     );
 
-    if (response.data.access_token && response.data.refresh_token) {
-      await setCookie("spotifyAccessToken", response.data.access_token);
-      await setCookie("spotifyRefreshToken", response.data.refresh_token);
-      return response.data.access_token;
-    } else {
-      throw new Error("Invalid token response");
-    }
+    const { access_token, refresh_token } = response.data;
+
+    await setCookie("spotifyAccessToken", access_token);
+    await setCookie("spotifyRefreshToken", refresh_token);
+
+    return access_token;
   } catch (error) {
-    console.error("Error exchanging code for token:", error);
-    throw error;
+    console.error("Token exchange error:", error);
+    throw new Error("Failed to authenticate with Spotify");
   }
 };
 
-// Refresh the access token using the refresh token
+// Refresh access token
 export const refreshAccessToken = async () => {
-  const { refreshToken } = await getTokens(); // Await getTokens()
-  if (!refreshToken) {
-    throw new Error("No refresh token found. Please re-authenticate.");
-  }
-
   try {
+    const { refreshToken } = await getTokens();
+    if (!refreshToken) throw new Error("No refresh token available");
+
     const response = await axios.post(
       "https://accounts.spotify.com/api/token",
       new URLSearchParams({
@@ -92,17 +103,16 @@ export const refreshAccessToken = async () => {
       }
     );
 
-    if (response.data.access_token) {
-      await setCookie("spotifyAccessToken", response.data.access_token);
-      if (response.data.refresh_token) {
-        await setCookie("spotifyRefreshToken", response.data.refresh_token);
-      }
-      return response.data.access_token;
-    } else {
-      throw new Error("Invalid token response");
+    const { access_token, refresh_token } = response.data;
+
+    await setCookie("spotifyAccessToken", access_token);
+    if (refresh_token) {
+      await setCookie("spotifyRefreshToken", refresh_token);
     }
+
+    return access_token;
   } catch (error) {
-    console.error("Error refreshing access token:", error);
-    throw error;
+    console.error("Token refresh error:", error);
+    throw new Error("Failed to refresh access token");
   }
 };
