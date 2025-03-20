@@ -1,4 +1,5 @@
-"use server";
+// app/actions/spotify.ts
+"use server"; // Mark this as a Server Action
 
 import { cookies } from "next/headers";
 import axios from "axios";
@@ -19,21 +20,24 @@ if (
   );
 }
 
+// Helper function to get cookies
 export const getTokens = async () => {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // Await the cookies() function
   const accessToken = cookieStore.get("spotifyAccessToken")?.value;
   const refreshToken = cookieStore.get("spotifyRefreshToken")?.value;
   return { accessToken, refreshToken };
 };
 
+// Helper function to set cookies
 const setCookie = async (name: string, value: string) => {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // Await the cookies() function
   cookieStore.set(name, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   });
 };
 
+// Exchange the authorization code for an access token
 export const exchangeCodeForToken = async (code: string) => {
   try {
     const response = await axios.post(
@@ -64,16 +68,15 @@ export const exchangeCodeForToken = async (code: string) => {
     throw error;
   }
 };
-//
+
+// Refresh the access token using the refresh token
 export const refreshAccessToken = async () => {
+  const { refreshToken } = await getTokens(); // Await getTokens()
+  if (!refreshToken) {
+    throw new Error("No refresh token found. Please re-authenticate.");
+  }
+
   try {
-    const { refreshToken } = await getTokens();
-
-    if (!refreshToken) {
-      console.log("No refresh token available.");
-      return null;
-    }
-
     const response = await axios.post(
       "https://accounts.spotify.com/api/token",
       new URLSearchParams({
@@ -95,11 +98,11 @@ export const refreshAccessToken = async () => {
         await setCookie("spotifyRefreshToken", response.data.refresh_token);
       }
       return response.data.access_token;
+    } else {
+      throw new Error("Invalid token response");
     }
-
-    return null;
   } catch (error) {
     console.error("Error refreshing access token:", error);
-    return null;
+    throw error;
   }
 };

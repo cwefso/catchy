@@ -1,51 +1,71 @@
-import { useState, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export const useAudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // Function to reset error state
+  const resetRecordingError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const startRecording = useCallback(async () => {
-    setIsRecording(true);
-    setError(null);
+    // Don't start a new recording if already recording
+    if (isRecording) return;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: 44100,
-          sampleSize: 16,
-        },
-      });
+      // Reset previous state
+      resetRecordingError();
+      chunksRef.current = [];
 
-      const options = {
-        audioBitsPerSecond: 128000,
-        mimeType: "audio/webm;codecs=opus",
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
       };
 
-      const recorder = new MediaRecorder(stream, options);
-
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
-
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm;codecs=opus" });
-        if (blob.size === 0) {
-          setError("No audio captured");
-        } else {
-          setAudioBlob(blob);
-        }
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setAudioBlob(audioBlob);
         setIsRecording(false);
+
+        // Stop all tracks in the stream
         stream.getTracks().forEach((track) => track.stop());
       };
 
-      recorder.start(1000);
-      setTimeout(() => recorder.state === "recording" && recorder.stop(), 5000);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Audio capture failed");
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Automatically stop recording after 6 seconds
+      setTimeout(() => {
+        if (
+          mediaRecorderRef.current &&
+          mediaRecorderRef.current.state === "recording"
+        ) {
+          mediaRecorderRef.current.stop();
+        }
+      }, 6000);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to start recording"
+      );
       setIsRecording(false);
     }
-  }, []);
+  }, [isRecording, resetRecordingError]);
 
-  return { isRecording, audioBlob, error, startRecording };
+  return {
+    isRecording,
+    audioBlob,
+    error,
+    startRecording,
+    resetRecordingError,
+  };
 };
